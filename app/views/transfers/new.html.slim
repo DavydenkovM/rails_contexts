@@ -1,0 +1,23 @@
+table
+  thead
+    tr
+      th Account
+      th Balance
+      th Bonus points
+  tbody
+    = render partial: 'account', collection: Account.all
+
+br
+
+= simple_form_for @transfer, url: transfers_path do |f|
+  - if @transfer.errors.any?
+    #error_explanation
+      h2 = "#{pluralize(@transfer.errors.count, "error")} prohibited this task from being saved:"
+      ul
+        - @transfer.errors.full_messages.each do |msg|
+          li = msg
+
+  = f.input :source_id, as: :select, collection: current_user.accounts, label: 'source'
+  = f.input :destination_id, as: :select, collection: Account.owned_by_others(current_user.id), label: 'destination'
+  = f.input :amount
+  = f.submit :send
