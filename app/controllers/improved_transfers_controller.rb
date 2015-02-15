@@ -1,4 +1,8 @@
 class ImprovedTransfersController < ApplicationController
+  include Surrounded
+  include Casting::Client
+  delegate_missing_methods
+
   before_action :authenticate_user!
 
   def new
@@ -7,14 +11,18 @@ class ImprovedTransfersController < ApplicationController
 
   def create
     @transfer = ImprovedMoneyTransfering.new(
-                  Account.find_by(id: improved_transfers_params[:source_id]), 
-                  Account.find_by(id: improved_transfers_params[:destination_id]),
-                  improved_transfers_params[:amount],
-                  self)
+                  find_account(improved_transfers_params[:source_id]),
+                  find_account(improved_transfers_params[:destination_id]),
+                  self,
+                  improved_transfers_params[:amount])
     @transfer.perform
   end
 
   private
+
+  def find_account(id)
+    Account.find_by(id: id)
+  end
 
   def improved_transfers_params
     params.require(:improved_money_transfering)
