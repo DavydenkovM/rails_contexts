@@ -1,7 +1,5 @@
 class Account < ActiveRecord::Base
-  include Surrounded
-  include Casting::Client
-  delegate_missing_methods
+  include Awareness
 
   belongs_to :user
 
