@@ -6,15 +6,15 @@ class ImprovedTransfersController < ApplicationController
   before_action :authenticate_user!
 
   def new
-    @transfer = ImprovedMoneyTransfering.new
+    @transfer = ImprovedMoneyTransfering.new(self)
   end
 
   def create
     @transfer = ImprovedMoneyTransfering.new(
+                  self,
                   find_account(improved_transfers_params[:source_id]),
                   find_account(improved_transfers_params[:destination_id]),
-                  self,
-                  improved_transfers_params[:amount])
+                  improved_transfers_params)
     @transfer.perform
   end
 

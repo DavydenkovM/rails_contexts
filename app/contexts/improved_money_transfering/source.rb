@@ -1,7 +1,6 @@
 class ImprovedMoneyTransfering
   module Source
-    role :source do
-      def transfer_to(destination, amount, callbacks = nil)
+      def transfer(amount, callbacks = nil)
         ActiveRecord::Base.transaction do
           begin
             self.balance -= amount
@@ -27,6 +26,5 @@ class ImprovedMoneyTransfering
           callbacks[:failure].call(attribute, message[0])
         end
       end
-    end
   end
 end

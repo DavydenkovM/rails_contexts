@@ -2,35 +2,42 @@ class ImprovedMoneyTransfering
   include ActiveModel::Model
   extend Surrounded::Context
 
+  attr_reader :source, :destination, :controller
+  attr_accessor :amount, :destination_id, :source_id
+
+  def initialize(controller, source = nil, destination = nil, params = nil)
+    map_roles([[:source, source],
+               [:destination, destination],
+               [:controller, controller]])
+    set_params(params)
+    super()
+  end
+
   delegate :display_error,
            :go_to,
-           :new_transfers_path, to: :controller
-
-  attr_accessor :amount
-
-  initialize(:source, :destination, :controller)
+           :new_improved_transfers_path, to: :controller
 
   validates :amount, presence: true,
                      numericality: { only_integer: true, greater_than: 10 }
 
-  def initialize(source = nil, destination = nil, controller = nil, amount = nil)
-    return self unless source && destination
-
-    map_roles([[:source, :source],
-               [:destination, :destination]])
-    self.amount = amount
-  end
-
   trigger :perform do
-    # if valid?
-      transfer_money
-    # end
-
+    if valid?
+      source.transfer(amount.to_i,
+             failure: ->(attribute, message) { errors.add(attribute, message) })
+    end
     errors.messages.any? ? (display_error :new) : (go_to new_improved_transfers_path)
   end
 
-  def transfer_money
-    source.transfer_to(destination, amount.to_i,
-                         failure: ->(attribute, message) { errors.add(attribute, message) })
+  private
+
+  def set_params(params)
+    return unless params
+
+    self.amount = params[:amount]
+    self.source_id = params[:source_id]
+    self.destination_id = params[:destination_id]
   end
+
+  Source = ImprovedMoneyTransfering::Source
+  Destination = ImprovedMoneyTransfering::Destination
 end
