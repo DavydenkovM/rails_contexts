@@ -3,16 +3,16 @@ class MoneyTransfering
     extend ActiveSupport::Concern
 
     def transfer_to(destination, amount, callbacks = nil)
-      ActiveRecord::Base.transaction do
-        begin
-          self.balance -= amount
-          destination.balance += amount
-          save!
-          destination.save!
-        rescue
-          yield_errors(destination, callbacks)
-        end
-      end
+      self.balance -= amount
+      destination.balance += amount
+      save!
+      destination.save!
+    rescue
+      yield_errors(destination, callbacks)
+      false
+    else
+      TransferPrinting.new(self).print
+      true
     end
 
     private

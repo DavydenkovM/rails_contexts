@@ -1,6 +1,7 @@
 class ImprovedMoneyTransfering
   include ActiveModel::Model
   extend Surrounded::Context
+  include Awareness
 
   attr_reader :amount, :destination_id, :source_id,
               :controller, :source, :destination
@@ -24,10 +25,13 @@ class ImprovedMoneyTransfering
   end
 
   trigger :perform do
-    if valid?
-      source.transfer(amount.to_i,
-             failure: ->(attribute, message) { errors.add(attribute, message) })
+    ActiveRecord::Base.transaction do
+      if valid?
+        source.transfer(amount.to_i, failure: default_fallback) and
+        destination.increment_bonus_points(amount.to_i, failure: default_fallback)
+      end
     end
+
     errors.messages.any? ? (display_error :new)
                          : (go_to new_improved_transfers_path)
   end
@@ -44,6 +48,10 @@ class ImprovedMoneyTransfering
 
   def find_account(id)
     Account.find_by(id: id)
+  end
+
+  def default_fallback
+    ->(attribute, message) { errors.add(attribute, message) }
   end
 
   Source = ImprovedMoneyTransfering::Source

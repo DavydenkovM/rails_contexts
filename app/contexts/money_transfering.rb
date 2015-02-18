@@ -25,9 +25,11 @@ class MoneyTransfering
   end
 
   def perform
-    if valid?
-      source.transfer_to(destination, amount.to_i,
-                         failure: ->(attribute, message) { errors.add(attribute, message) })
+    ActiveRecord::Base.transaction do
+      if valid?
+        source.transfer_to(destination, amount.to_i, failure: default_fallback) and
+        destination.increment_bonus_points(amount.to_i, failure: default_fallback)
+      end
     end
 
     errors.messages.any? ? (display_error :new)
@@ -52,5 +54,9 @@ class MoneyTransfering
 
   def find_account(id)
     Account.find(id)
+  end
+
+  def default_fallback
+    ->(attribute, message) { errors.add(attribute, message) }
   end
 end
