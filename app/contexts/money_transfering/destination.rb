@@ -1,11 +1,14 @@
 class MoneyTransfering
-  module Recipient
-    def increment_bonus_points(points, callbacks = {failure: ->{} })
+  module Destination
+    def increment_bonus_points(points, callbacks = nil)
       self.bonus_points += points
-      save!
-    rescue
-      yield_errors(self, callbacks)
-      false
+
+      if valid?
+        true
+      else
+        yield_errors(self, callbacks)
+        false
+      end
     end
 
     private
@@ -19,3 +22,4 @@ class MoneyTransfering
     end
   end
 end
+

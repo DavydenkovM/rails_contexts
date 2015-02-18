@@ -4,7 +4,7 @@ class ImprovedMoneyTransfering
   include Awareness
 
   attr_reader :amount, :destination_id, :source_id,
-              :controller, :source, :destination
+              :controller, :source, :destination, :transfering_system
 
   delegate :display_error,
            :go_to,
@@ -18,18 +18,18 @@ class ImprovedMoneyTransfering
 
     map_roles([[:source, find_account(params[:source_id])],
                [:destination, find_account(params[:destination_id])],
-               [:controller, controller]])
+               [:controller, controller],
+               [:transfering_system, ::TransferingSystem.new]])
 
     set_context_params(params)
     super()
   end
 
   trigger :perform do
-    ActiveRecord::Base.transaction do
-      if valid?
-        source.transfer(amount.to_i, failure: default_fallback) and
-        destination.increment_bonus_points(amount.to_i, failure: default_fallback)
-      end
+    if valid?
+      source.transfer(amount.to_i, failure: default_fallback) and
+      destination.increment_bonus_points(amount.to_i, failure: default_fallback) and
+      transfering_system.save_transaction(failure: default_fallback)
     end
 
     errors.messages.any? ? (display_error :new)
@@ -56,4 +56,5 @@ class ImprovedMoneyTransfering
 
   Source = ImprovedMoneyTransfering::Source
   Destination = ImprovedMoneyTransfering::Destination
+  TransferingSystem = ImprovedMoneyTransfering::System
 end

@@ -21,4 +21,5 @@ ActiveRecord::Base.transaction do
     {balance: 10000, bonus_points: 0, user_id: 3},
   ])
 
+  transferring_system = TransferingSystem.create
 end

@@ -2,7 +2,7 @@ class MoneyTransfering
   include ActiveModel::Model
 
   attr_reader :amount, :destination_id, :source_id,
-              :controller, :destination, :source
+              :controller, :destination, :source, :transfering_system
 
   delegate :display_error,
            :go_to,
@@ -16,20 +16,21 @@ class MoneyTransfering
 
     @source = find_account(params[:source_id])
     @destination = find_account(params[:destination_id])
+    @transfering_system = ::TransferingSystem.new
 
-    assign_transferrer(@source)
-    assign_recipient(@destination)
+    assign_source(@source)
+    assign_destination(@destination)
+    assign_transfering_system(@transfering_system)
     @controller = controller
 
     set_context_params(params)
   end
 
   def perform
-    ActiveRecord::Base.transaction do
-      if valid?
-        source.transfer_to(destination, amount.to_i, failure: default_fallback) and
-        destination.increment_bonus_points(amount.to_i, failure: default_fallback)
-      end
+    if valid?
+      source.transfer(destination, amount.to_i, failure: default_fallback) and
+      destination.increment_bonus_points(amount.to_i, failure: default_fallback) and
+      transfering_system.save_transaction(source, destination, failure: default_fallback)
     end
 
     errors.messages.any? ? (display_error :new)
@@ -38,12 +39,16 @@ class MoneyTransfering
 
   private
 
-  def assign_transferrer(source)
-    source.extend(MoneyTransfering::Transferrer)
+  def assign_source(source)
+    source.extend(MoneyTransfering::Source)
   end
 
-  def assign_recipient(destination)
-    destination.extend(MoneyTransfering::Recipient)
+  def assign_destination(destination)
+    destination.extend(MoneyTransfering::Destination)
+  end
+
+  def assign_transfering_system(transfering_system)
+    transfering_system.extend(MoneyTransfering::System)
   end
 
   def set_context_params(params)

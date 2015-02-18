@@ -1,6 +1,6 @@
-class ImprovedMoneyTransfering
+class MoneyTransfering
   module Source
-    def transfer(amount, callbacks = nil, any_errors = false)
+    def transfer(destination, amount, callbacks = nil, any_errors = false)
       self.balance -= amount
       destination.balance += amount
 
@@ -31,3 +31,4 @@ class ImprovedMoneyTransfering
     end
   end
 end
+

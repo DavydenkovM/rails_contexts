@@ -17,7 +17,7 @@ br
         - @transfer.errors.full_messages.each do |msg|
           li = msg
 
-  = f.input :source_id, as: :select, collection: current_user.accounts, label: 'source'
-  = f.input :destination_id, as: :select, collection: Account.owned_by_others(current_user.id), label: 'destination'
+  = f.input :source_id, as: :select, collection: current_user.accounts, label: 'source', selected: 1
+  = f.input :destination_id, as: :select, collection: Account.owned_by_others(current_user.id), label: 'destination', selected: 1
   = f.input :amount
   = f.submit :send
